@@ -139,3 +139,14 @@ def grade(img, contrast=1.12, sat=1.1, lift=-.03, shadow_tint=(0.06,0.0,-0.02)):
     L=lum(f)[...,None]; f=L+(f-L)*sat
     f=f+np.array(shadow_tint,np.float32)*(1-L)**2      # BGR: cool shadows
     return np.clip(f*255,0,255).astype(np.uint8)
+
+def protect(painted, col, aux, lum_max=.32, dmin=.85, grow=2, amt=.9):
+    """bring back crisp dark details (eyes, mouths, cracks) on high-detail objects after painting"""
+    from kuwa import kuwahara
+    colf=saturate(col,1.22,1.08)
+    crisp=kuwahara(colf,2,q=6).astype(np.float32)
+    L=lum(colf.astype(np.float32)/255.); d=aux[...,2].astype(np.float32)/255.
+    m=((L<lum_max)&(d>dmin)).astype(np.uint8)
+    m=cv2.dilate(m,np.ones((grow*2+1,grow*2+1),np.uint8)).astype(np.float32)
+    m=cv2.GaussianBlur(m,(0,0),1.2)[...,None]*amt
+    return np.clip(painted.astype(np.float32)*(1-m)+crisp*m,0,255).astype(np.uint8)

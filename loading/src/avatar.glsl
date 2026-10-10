@@ -2,7 +2,7 @@
 vec3 tO; mat3 tR; vec3 hO; mat3 hR; vec3 shL,shR,haL,haR,hipL,hipR,ftL,ftR; vec3 pkA,pkB; mat3 pkR;
 int FACE=0;           // 0 grin, 1 wow, 2 determined
 vec3 HOODIE=vec3(0.); vec3 PANTS=vec3(0.); vec3 SKIN=vec3(0.); vec3 HAIR=vec3(0.); vec3 PICKC=vec3(0.);
-float PICK_ON=1.;
+float PICK_ON=1.; float PKS=1.;
 void avatarColors(){ HOODIE=HX(0xff6a1f); PANTS=HX(0x2b3a66); SKIN=HX(0xf3c690); HAIR=HX(0x3a2214); PICKC=HX(0x35e0ff); }
 // helper: place limbs from torso frame
 void avatarRig(vec3 base, vec3 torsoEul, vec3 headEul, vec3 armL, vec3 armR, vec3 legL, vec3 legR){
@@ -19,10 +19,10 @@ float sdHair(vec3 q){
   d=max(d,-(sdBox(q-vec3(0,-.25,.55),vec3(.8,.42,.4),.05)));   // open face
   d=max(d,-(q.y+.05-.35*smoothstep(.2,.7,-q.z))); return d; }
 float pickHeadSD(vec3 p){
-  vec3 q=transpose(pkR)*(p-pkB); q.z*=1.5; float d=1e9; vec3 prev;
+  vec3 q=transpose(pkR)*(p-pkB)/PKS; q.z*=1.5; float d=1e9; vec3 prev;
   for(int i=0;i<=10;i++){ float t=float(i)/10.*2.-1.; float a=t*1.05; vec3 c=vec3(sin(a)*1.45,-(1.-cos(a))*1.2,0.);
     if(i>0){ float rr=mix(.28,.04,pow(abs(t),1.2)); d=smin(d,sdCapsule(q,prev,c,rr),.1);} prev=c; }
-  d=smin(d,sdBox(q,vec3(.27,.3,.27),.06),.08); return d/1.5; }
+  d=smin(d,sdBox(q,vec3(.27,.3,.27),.06),.08); return d/1.5*PKS; }
 vec2 mapAvatar(vec3 p){
   vec2 r=vec2(1e9,0.);
   if(length(p-tO)>9.) return vec2(length(p-tO)-7.,0.);
@@ -66,6 +66,6 @@ bool avatarMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, in
   else if(id<32.5){ alb=HOODIE*.95; vec3 q=p; float dh=min(length(p-haL),length(p-haR)); if(dh<.45) alb=SKIN; }
   else if(id<34.5){ float dl=min(length(p-ftL),length(p-ftR)); alb=PANTS; if(dl<.55) alb=mix(HX(0xffffff),HX(0x111111),step(.25,dl)*0.+step(dl,.18)); detail=.55; }
   else if(id<36.5){ alb=HAIR*mix(.8,1.25,fbm(p*6.)); detail=.8; spec=.4; }
-  else if(id<37.5){ alb=HX(0x6b3a17); detail=.55; grp=2.; }
-  else { alb=PICKC; spec=1.2; emi=PICKC*.45; detail=.7; grp=2.; }
+  else if(id<37.5){ alb=HX(0x7a4420); detail=.75; grp=2.; }
+  else { alb=PICKC; spec=1.2; emi=PICKC*.45; detail=.9; grp=2.; }
   return true;}
