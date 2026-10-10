@@ -1,0 +1,26 @@
+<!doctype html><html><body style="margin:0"><canvas id=c></canvas><script>
+async function run(){
+  const q=new URLSearchParams(location.search);
+  const W=+q.get('w'), H=+q.get('h'), scene=q.get('scene'), pass=+(q.get('pass')||0), strips=+(q.get('strips')||8);
+  const lib=await (await fetch('lib.glsl')).text(), sc=(await (await fetch('avatar.glsl')).text())+'\n'+(await (await fetch(scene)).text()), mn=await (await fetch('main.glsl')).text();
+  const c=document.getElementById('c'); c.width=W; c.height=H;
+  const gl=c.getContext('webgl2',{preserveDrawingBuffer:true});
+  const vs=`#version 300 es
+in vec2 p; void main(){gl_Position=vec4(p,0,1);}`;
+  const fs=`#version 300 es
+precision highp float;
+uniform vec2 uRes; uniform int uPass; out vec4 frag;
+`+lib+'\n'+sc+'\n'+mn;
+  function sh(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){throw new Error(gl.getShaderInfoLog(o));}return o;}
+  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+  gl.useProgram(pr);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const l=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,2,gl.FLOAT,false,0,0);
+  gl.uniform2f(gl.getUniformLocation(pr,'uRes'),W,H);gl.uniform1i(gl.getUniformLocation(pr,'uPass'),pass);
+  gl.enable(gl.SCISSOR_TEST);
+  for(let i=0;i<strips;i++){const y0=Math.floor(H*i/strips),y1=Math.floor(H*(i+1)/strips);gl.scissor(0,y0,W,y1-y0);gl.drawArrays(gl.TRIANGLES,0,3);gl.finish();await new Promise(r=>setTimeout(r,0));}
+  return c.toDataURL('image/png');
+}
+window.go=run;
+</script></body></html>
