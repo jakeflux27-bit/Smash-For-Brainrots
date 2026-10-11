@@ -48,7 +48,7 @@ bool tungMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, inou
 // ---------- giant toilet boss (a big shouting head popping out of a toilet) ----------
 vec3 BO_=vec3(0.,-100.,0.); mat3 BR_=mat3(1.); float BS_=1.3; mat3 BHR=mat3(1.); vec3 BHC=vec3(0.,7.9,1.7); float BHS=1.2;
 const vec3 BHRAD=vec3(2.0,2.45,2.05);
-float BOSS_MOUTH=1.; float BOSS_LOOK=0.;
+float BOSS_MOUTH=1.; float BOSS_LOOK=0.; float BOSS_SCARED=0.;
 float sdBossHead(vec3 h){
   float d=sdEllipsoid(h,BHRAD);
   d=smin(d,sdEllipsoid(h-vec3(0.,-.05,1.95),vec3(.34,.5,.42)),.25);                 // nose
@@ -93,22 +93,24 @@ vec3 bossFace(vec3 h, vec3 c){
   for(int i=0;i<3;i++){ float fi=float(i); float y=.58+fi*.09; float wr=abs(v-y-.05*cos(u*3.))-.007;
     c=mix(c,c*.7,fill(wr,.012)*front*smoothstep(.5,.15,abs(u))); }
   // anger vein mark on the temple
-  { vec2 a=uv-vec2(.5,.66); a=abs(a); float vm=min(sd2Seg(a,vec2(.03,.1),vec2(.03,.03)),sd2Seg(a,vec2(.03,.03),vec2(.1,.03)))-.022;
+  if(BOSS_SCARED<.5){ vec2 a=uv-vec2(.5,.66); a=abs(a); float vm=min(sd2Seg(a,vec2(.03,.1),vec2(.03,.03)),sd2Seg(a,vec2(.03,.03),vec2(.1,.03)))-.022;
     c=mix(c,HX(0xd8202a),fill(vm,.008)*front); }
+  else { vec2 d=uv-vec2(.62,.42); float drop=max(length(d)-.07,dot(d,normalize(vec2(-.5,1.)))*0.+0.)*1.; drop=min(drop,sd2Seg(uv,vec2(.62,.45),vec2(.6,.6))-.035);
+    c=mix(c,HX(0x9fe0ff),fill(drop,.01)*front); c=mix(c,vec3(1.),fill(length(uv-vec2(.6,.44))-.018,.006)*front); }
   for(int s=0;s<2;s++){ float sg=s==0?-1.:1.; vec2 q=vec2(uv.x*sg,uv.y);
     c=mix(c,c*vec3(.78,.6,.58),fill(sd2Ell(q,vec2(.36,.2),vec2(.29,.18)),.08)*front*.75);   // dark sockets
-    float eye=sd2Ell(q,vec2(.36,.18),vec2(.22,.13));
+    float eye=sd2Ell(q,vec2(.36,.18),mix(vec2(.22,.13),vec2(.21,.17),BOSS_SCARED));
     float cut=dot(q-vec2(.36,.2),normalize(vec2(-.55,-1.)));
-    float ey=max(eye,-cut);
+    float ey=BOSS_SCARED>.5?eye:max(eye,-cut);
     c=mix(c,ink,fill(ey-.028,.01)*front);
     c=mix(c,HX(0xfff8ee),fill(ey,.01)*front);
     vec2 pc=vec2(sg*.36+BOSS_LOOK,.14);
-    c=mix(c,ink,fill(length((uv-pc)/vec2(1.,1.15))-.062,.01)*front*fill(ey,.01));
+    c=mix(c,ink,fill(length((uv-pc)/vec2(1.,1.15))-mix(.062,.045,BOSS_SCARED),.01)*front*fill(ey,.01));
     c=mix(c,HX(0xffffff),fill(length(uv-pc-vec2(-.02,.025))-.017,.006)*front*fill(ey,.01));
     // red veins in the eye white
     c=mix(c,HX(0xe04040),fill(abs(q.y-.15-.03*sin(q.x*40.))-.004,.004)*front*fill(ey+.03,.01)*step(.47,q.x)*.8);
     // thick angry brows, low over the eyes
-    vec2 b0=vec2(.68,.44), b1=vec2(.09,.24);
+    vec2 b0=BOSS_SCARED>.5?vec2(.66,.36):vec2(.68,.44), b1=BOSS_SCARED>.5?vec2(.12,.5):vec2(.09,.24);
     float brow=sd2Seg(q,b0,b1)-mix(.04,.07,clamp(dot(q-b0,b1-b0)/dot(b1-b0,b1-b0),0.,1.));
     c=mix(c,HX(0x2a1810),fill(brow,.012)*front);
     c=mix(c,HX(0xe0605a),fill(sd2Ell(q,vec2(.52,-.12),vec2(.16,.08)),.08)*front*.45);

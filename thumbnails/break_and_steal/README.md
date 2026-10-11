@@ -8,6 +8,7 @@ Painted 1920x1080 thumbnails, same pipeline as the other thumbnails (3D raymarch
 | `2_mushroom_mage_wakes.png` | Night: the Grand Mushroom Mage wakes up (?!) as the player grabs a glowing galaxy egg |
 | `3_triple_t_chase.png` | Sunset: Triple T (Tung Tung Tung Sahur) swings his bat (!!) while the player runs off with the golden egg |
 | `4_verity_toilet_chase.png` | Player runs off with a glowing Verity overhead while the giant toilet boss chases them past its egg nests (!!) |
+| `5_toilet_cruelty_chase.png` | Player carries a terrified little toilet boss under one arm while a giant angry Cruelty bounces after them (!!) |
 | `chase/toilet_boss_tung.png` | Player runs with Tung overhead, giant toilet boss chasing |
 | `chase/cameraman_verity.png` | Player hugs Verity, giant Cameraman grabbing for it |
 
