@@ -174,12 +174,72 @@ MONETIZATION (Config.Store; every PassId/ProductId = 0 until the owner creates i
   - Starter Pack (one-time, 49 R$).
 - Offer rules: at most one auto-popup per session, only after round 3 and never before the first ending; plus contextual nudges (timer low -> Stuck in Traffic button).
 
-ART & AUDIO
-- Bright cartoon, chunky readable props, low part count, original assets only (built from parts, or AI meshes via the Studio MCP mesh tool, max 4 generations at a time).
-- Original SFX: pickup pop, deposit thunk, vacuum hum, car arrival, grade stamp.
+AUDIO
+- Original SFX: pickup pop, deposit thunk, vacuum hum, spray fizz, car arrival, grade stamp.
 - Music speeds up in the last 30 s.
 - Inspector lines appear as speech bubbles (no voice acting).
 </game_design>
+
+<visual_direction>
+The look must match today's high-rated hits (Pet Store Tycoon, Makeup Mania, Firefighting Sim): bright, clean, cozy, toy-like. It must read instantly on a phone screen and in a thumbnail. Every number below is a starting value in GameConfig.Visuals; tune it in playtests.
+
+STYLE
+- Stylized cartoon, not realistic: chunky rounded props about 1.3x real proportions, soft bevels, simple flat colors.
+- Use SmoothPlastic plus a few stylized MaterialVariants (wood floor, carpet, tile, wallpaper). NEVER use photo-real textures.
+- Golden rule: the room is calm, the mess pops.
+  - Rooms: soft pastel walls, a different one per room (bedroom mint, bathroom sky blue, living room peach, kitchen butter yellow), warm wood floors.
+  - Mess: saturated color-coded items (clothes blue, toys yellow, trash green) plus an icon on each, so they stand out from any distance and are colorblind-safe.
+- Dirt is visible and satisfying to remove: dust, footprints, mud and juice-stain decals whose transparency fades as they are cleaned. Clean surfaces get a brief sparkle and shine.
+- Props stay consistent:
+  - Build from parts, or generate meshes via the Studio MCP mesh tool (max 4 at a time) with this prompt pattern: "<object>, chunky stylized cartoon, low-poly, soft rounded edges, bright flat colors, no text, no logo".
+  - Prop textures <= 512 px.
+  - CastShadow off on small items.
+
+LIGHTING (Roblox Lighting)
+- Technology = Future, so interior lights cast soft shadows. Max ~8 shadow-casting lights per house.
+- ColorCorrection: Saturation +0.15, Contrast +0.05, a very slight warm tint.
+- Bloom: Intensity 0.4, Size 24, Threshold 0.9.
+- SunRays subtle. Atmosphere on the street.
+- The sky clock IS the timer:
+  - Each round starts at sunny afternoon (ClockTime ~15).
+  - Tween to golden hour as time runs down, and to dusk (~18.3) when Mom arrives.
+  - Warm light pours through the windows; at 0:30 her car's headlights sweep across the walls.
+- Anomalies tint the scene slightly purple with a gentle ColorCorrection shift. They are funny, never dark or scary.
+
+CAMERA (interiors are where Roblox games often look bad, so get this right)
+- Ceilings >= 14 studs, doors >= 8 studs wide, no tight corners, so the camera never clips and 4 co-op players fit.
+- Dollhouse cutaway: any wall or furniture between the camera and the player fades to ~85% transparency on the client.
+- Inspection cutscene: the camera follows the inspector room to room with comedic angles (a close-up on the closet door before it opens).
+
+CHARACTERS
+- Inspectors (Mom, Dad, Grandma, Big Sister): stylized rigs with distinct silhouettes (hair shape, outfit color) and expressive swappable faces (happy, suspicious, furious, shocked).
+- Exaggerated animations: stomping in, finger wag, jaw drop, happy dance.
+- Big readable speech bubbles.
+- Anomalies: cute and funny. Googly eyes, squash-and-stretch wobble, hopping, a sparkle trail.
+
+VFX (Juice module; every action gets one)
+| Action | Effect |
+|---|---|
+| Pickup | Scale-pop the item, then fly it in an arc to the carry stack. |
+| Deposit | Item drops into the bin, a burst of stars, a "+1" floater, combo counter. |
+| Vacuum | Dust puffs pulled into the nozzle; the floor behind it shines. |
+| Spray | A Beam stream plus droplet particles; dirt fizzes away. |
+| Bed made | The blanket snaps flat with a puff. |
+| Cleanliness meter | Fills with a shimmer. |
+| Grade | The letter stamp slams in with a small screen shake. |
+| S grade | Confetti. |
+| Ending card | Dramatic zoom, plus the "7/18" counter ticking up. |
+
+- Budget: max ~200 active particles per client; reduce automatically on low-end devices.
+
+UI (same family as our last game: cream rounded panels, thick dark outlines, candy-colored buttons, big icons, minimal text)
+- Mom's Car bar is the main timer: a road across the top of the screen with a little car icon driving toward a house icon. It turns red and shakes in the last 30 s. The number countdown sits under it, small.
+- Big cleanliness % meter, carry-capacity dots, and a one-line next-goal HUD.
+- Use Highlight on the hovered or targeted item only (Roblox allows max 31 active Highlights).
+
+THUMBNAIL READINESS
+- Each room has a saved "photo" camera angle for before/after screenshots. Messy-vs-spotless shots and Mom-in-the-doorway shots are the planned thumbnails.
+</visual_direction>
 
 <first_60_seconds>
 This is the most important spec. It MUST hold exactly:
@@ -239,6 +299,11 @@ M0 Setup & design (no gameplay yet)
 
 M1 Vertical slice (solo)
 - Deliverables:
+  - LOOK-DEV FIRST: build the bedroom to the <visual_direction> spec (lighting, palette, props, decals, cutaway camera).
+  - STOP and send the owner 3 screenshots for approval before building gameplay:
+    1. the messy room;
+    2. the same room spotless;
+    3. Mom in the doorway at dusk.
   - One house with the bedroom only.
   - Sort & toss, make the bed, vacuum.
   - Timer, Mom's arrival, inspection, grade.
@@ -285,7 +350,8 @@ M5 Monetization
 
 M6 Polish & launch prep
 - Deliverables:
-  - Juice pass, audio, loading screen (the room is visible within 3 s).
+  - Juice pass (every row of the VFX table), audio, loading screen (the room is visible within 3 s).
+  - Visual consistency pass: every room and prop matches <visual_direction>. Capture before/after screenshots of every room from the saved photo angles for thumbnails.
   - Mobile/console pass and a low-end performance pass.
   - Analytics review and a QA checklist.
   - A frustration audit: list every moment a player could feel cheated (unclear chore, hidden-item check, timer too short, losing progress) and soften each one.
