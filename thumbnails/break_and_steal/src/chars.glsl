@@ -472,3 +472,97 @@ bool mageMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, inou
   else if(id<115.5){ alb=mix(HX(0x5a3416),HX(0x8a5a2e),.5+.5*sin(dot(q,vec3(4.,9.,4.)))); detail=.6; }
   else { alb=HX(0x7af0ff); emi=HX(0x40d8ff)*3.; spec=2.; detail=.9; }
   return true;}
+
+// ---------- Titan Cameraman (series look: black suit + long coat, black camera head with cyan lens,
+//            side cameras, antenna with red light, cyan chest core with claws, silver jet wings, big hammer) ----------
+vec3 tcO=vec3(0.,-100.,0.); mat3 tcR=mat3(1.); float tcS=1.25; mat3 tcLean=mat3(1.); mat3 tcHead=mat3(1.);
+const vec3 tcH=vec3(0.,4.2,0.); const vec3 tcHC=vec3(0.,9.05,.15); const float tcHS=1.35;
+vec3 tcElL,tcHaL,tcElR,tcHaR,tcKnL,tcAnL,tcKnR,tcAnR,tcHamA,tcHamB; vec3 tcHamAx=vec3(1.,0.,0.);
+vec3 tcUp(vec3 q){ return tcH+transpose(tcLean)*(q-tcH); }           // query point -> upper-body frame
+float tcCoat(vec3 u){
+  float y=u.y; float t=clamp((6.6-y)/4.,0.,1.);
+  vec2 rr=vec2(mix(1.22,1.55,t),mix(.72,1.05,t));
+  float e=(length(u.xz/rr)-1.)*min(rr.x,rr.y);
+  float sh=max(abs(e)-.09, abs(y-4.5)-2.1);
+  if(abs(u.x)<.4+.25*t) sh=max(sh,u.z-.1);                               // open front
+  return sh;}
+vec2 mapTitan(vec3 p){
+  vec3 q=transpose(tcR)*(p-tcO)/tcS;
+  float bd=length(q-vec3(0.,7.,0.))-9.5; if(bd>1.) return vec2(bd*tcS,0.);
+  vec2 r=vec2(1e9,0.);
+  // legs + boots (world-upright)
+  float lg=min(sdCapsule(q,vec3(-.62,4.2,0.),tcKnL,.62),sdCapsule(q,tcKnL,tcAnL,.55));
+  lg=min(lg,min(sdCapsule(q,vec3(.62,4.2,0.),tcKnR,.62),sdCapsule(q,tcKnR,tcAnR,.55)));
+  r=U(r,vec2(lg,130.));
+  float bt=min(sdBox(q-tcAnL-vec3(0.,-.25,.4),vec3(.5,.36,.8),.16),sdBox(q-tcAnR-vec3(0.,-.25,.4),vec3(.5,.36,.8),.16));
+  r=U(r,vec2(bt,131.));
+  // upper body
+  vec3 u=tcUp(q);
+  float tor=smin(sdBox(u-vec3(0.,6.45,0.),vec3(1.32,1.05,.7),.28),sdBox(u-vec3(0.,5.0,0.),vec3(1.08,.8,.62),.22),.4);
+  tor=min(tor,tcCoat(u));
+  tor=min(tor,sdCapsule(u,vec3(0.,7.3,0.),vec3(0.,7.9,.05),.42));                              // neck
+  r=U(r,vec2(tor,130.));
+  // arms
+  vec3 sL=vec3(-1.6,7.05,0.), sR=vec3(1.6,7.05,0.);
+  float ar=min(sdCapsule(u,sL,tcElL,.55),sdCapsule(u,tcElL,tcHaL,.5));
+  ar=min(ar,min(sdCapsule(u,sR,tcElR,.55),sdCapsule(u,tcElR,tcHaR,.5)));
+  r=U(r,vec2(ar,130.));
+  r=U(r,vec2(min(sdSphere(u-tcHaL,.62),sdSphere(u-tcHaR,.62)),131.));                         // gloves
+  // shoulder cameras
+  float sc=1e9; for(int i=0;i<2;i++){ float sg=i==0?-1.:1.; vec3 c=u-vec3(sg*1.4,7.75,.05);
+    sc=min(sc,sdBox(c,vec3(.32,.26,.5),.06)); sc=min(sc,sdCyl((c-vec3(0.,0.,.55)).xzy,.12,.17,.03)); }
+  r=U(r,vec2(sc,135.));
+  // chest core: casing, glowing lens, three claws
+  vec3 cc=u-vec3(0.,6.6,.72);
+  r=U(r,vec2(sdCyl(cc.xzy,.14,.6,.05),133.));
+  r=U(r,vec2(sdCyl((cc-vec3(0.,0.,.12)).xzy,.05,.4,.03),138.));
+  float cl=1e9; for(int i=0;i<3;i++){ float a=float(i)*2.094+1.571; vec3 d=vec3(cos(a),sin(a),0.);
+    cl=min(cl,sdCapsule(cc,d*.6,d*.86+vec3(0.,0.,.22),.07)); }
+  r=U(r,vec2(cl,136.));
+  // jetpack wings (4 silver blades) on the back
+  float wg=1e9; for(int i=0;i<4;i++){ float sg=i<2?-1.:1.; float a=(mod(float(i),2.)<.5?.55:1.05)*sg;
+    vec3 w=u-vec3(sg*.45,6.9,-.85); w.xy=mat2(cos(a),sin(a),-sin(a),cos(a))*w.xy; wg=min(wg,sdBox(w-vec3(0.,1.25,0.),vec3(.2,1.35,.05),.04)); }
+  r=U(r,vec2(wg,139.));
+  // head (camera)
+  vec3 h=tcHC+transpose(tcHead)*(u-tcHC)/tcHS;
+  vec2 rh=vec2(1e9,0.);
+  float hd=sdBox(h-tcHC,vec3(.95,.75,1.),.16);
+  rh=U(rh,vec2(hd,132.));
+  vec3 lq=h-tcHC-vec3(0.,-.05,1.05);
+  rh=U(rh,vec2(max(sdCyl(lq.xzy,.22,.74,.05),-sdCyl((lq-vec3(0.,0.,.2)).xzy,.12,.58,.02)),133.));      // lens bezel
+  rh=U(rh,vec2(sdCyl((lq-vec3(0.,0.,.05)).xzy,.06,.6,.02),134.));                                     // glowing screen
+  float sd=1e9; for(int i=0;i<2;i++){ float sg=i==0?-1.:1.; vec3 c=h-tcHC-vec3(sg*1.18,-.1,.15);
+    sd=min(sd,sdBox(c,vec3(.24,.32,.6),.06)); sd=min(sd,sdCyl((c-vec3(0.,0.,.62)).xzy,.1,.16,.03)); }
+  rh=U(rh,vec2(sd,135.));
+  float ant=sdCapsule(h,tcHC+vec3(0.,.7,-.35),tcHC+vec3(0.,2.5,-.6),.05);
+  for(int i=0;i<2;i++){ float sg=i==0?-1.:1.; vec3 c=h-tcHC-vec3(sg*.55,.88,-.15); c.xy=mat2(cos(sg*.5),sin(sg*.5),-sin(sg*.5),cos(sg*.5))*c.xy;
+    ant=min(ant,sdBox(c,vec3(.36,.035,.3),.02)); }                                                  // ear screens / plates
+  ant=min(ant,sdBox(h-tcHC-vec3(0.,1.05,-.75),vec3(.03,.3,.28),.02));                              // fin
+  rh=U(rh,vec2(ant,136.));
+  rh=U(rh,vec2(sdSphere(h-tcHC-vec3(0.,2.56,-.61),.13),137.));                                       // red light
+  rh.x*=tcHS; r=U(r,rh);
+  // mechanical hammer
+  r=U(r,vec2(sdCapsule(u,tcHamA,tcHamB,.14),136.));
+  vec3 hq=u-tcHamB; vec3 ax=tcHamAx; vec3 yy=normalize(tcHamB-tcHamA); vec3 zz=normalize(cross(ax,yy)); vec3 xx=cross(yy,zz);
+  vec3 hl=vec3(dot(hq,xx),dot(hq,yy),dot(hq,zz));
+  r=U(r,vec2(sdCyl(hl.yxz,1.35,.78,.12),139.));
+  r=U(r,vec2(sdCyl((hl-vec3(1.35,0.,0.)).yxz,.22,.5,.05),136.));                                   // jet nozzle
+  r=U(r,vec2(min(sdCyl((hl-vec3(.75,0.,0.)).yxz,.09,.82,.02),sdCyl((hl+vec3(.75,0.,0.)).yxz,.09,.82,.02)),140.));  // blue bands
+  r.x*=tcS; return r;}
+bool titanMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, inout float spec, inout float detail, inout float grp){
+  if(id<129.5||id>140.5) return false;
+  vec3 q=transpose(tcR)*(p-tcO)/tcS; grp=6.; detail=.7; spec=.6;
+  if(id<130.5){ alb=HX(0x1c1e24)*mix(.85,1.15,fbm(q*2.)); spec=.5;
+    vec3 u=tcUp(q); if(u.z>.3&&abs(u.x)<.34&&u.y>5.3&&u.y<7.2){ alb=HX(0x2c2f38); if(abs(u.x)<.06) alb=HX(0x0c0d10); } }   // vest + center line
+  else if(id<131.5){ alb=HX(0x0e0f12); spec=.8; }
+  else if(id<132.5){ alb=HX(0x17191e)*mix(.9,1.1,fbm(q*4.)); spec=1.6; detail=.85; }
+  else if(id<133.5){ alb=HX(0x3a3e48); spec=1.8; detail=.9; }
+  else if(id<134.5){ vec3 u=tcUp(q); vec3 h=tcHC+transpose(tcHead)*(u-tcHC)/tcHS; float rr=length((h-tcHC-vec3(0.,-.05,1.1)).xy);
+    alb=HX(0x9cf6ff); emi=HX(0x2ad8ff)*(3.5-2.*smoothstep(.0,.6,rr))+HX(0xffffff)*(1.-smoothstep(.0,.12,rr))*3.; detail=.99; }
+  else if(id<135.5){ alb=HX(0x2a2d34); spec=1.4; detail=.8; }
+  else if(id<136.5){ alb=HX(0x101114); spec=1.2; detail=.75; }
+  else if(id<137.5){ alb=HX(0xff3020); emi=HX(0xff2010)*5.; detail=.9; }
+  else if(id<138.5){ alb=HX(0x9cf6ff); emi=HX(0x2ad8ff)*4.5; detail=.95; }
+  else if(id<139.5){ alb=HX(0xc8d0dc)*mix(.85,1.08,fbm(q*3.)); spec=2.2; detail=.75; }
+  else { alb=HX(0x2a8cff); emi=HX(0x2a8cff)*1.2; spec=1.5; detail=.8; }
+  return true;}
