@@ -148,39 +148,12 @@
    "shadow": 12
   },
   {
-   "txt": "Skibidi Toilet",
-   "at": [
-    1100,
-    205
-   ],
-   "size": 72,
-   "rot": -2,
-   "sw": 10,
-   "stroke": [
-    0.04,
-    0.02,
-    0.05
-   ],
-   "top": [
-    1,
-    1,
-    1
-   ],
-   "bottom": [
-    0.92,
-    0.92,
-    0.92
-   ],
-   "extrude": 5,
-   "shadow": 8
-  },
-  {
    "txt": "SECRET",
    "at": [
     1100,
-    285
+    255
    ],
-   "size": 104,
+   "size": 118,
    "rot": -2,
    "sw": 14,
    "stroke": [

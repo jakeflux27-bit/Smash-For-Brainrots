@@ -11,7 +11,7 @@ These are glossy 3D renders (no painting), built to the formula that top home-pa
 |---|---|
 | `1_tung_gold.png` | Avatar shows off a giant gold Tung Tung Tung Sahur on their fenced base. Text: `$997,151,167/s`, name, rainbow `SECRET` |
 | `2_verity.png` | Same setup with a giant Verity wearing a gold halo. Text: `$2,500,000,000/s` |
-| `3_skibidi_toilet.png` | Same setup with a giant shouting Skibidi Toilet. Text: `$1,750,000,000/s` |
+| `3_skibidi_toilet.png` | Same setup with a giant shouting toilet head (no name text, to stay clear of trademark issues). Text: `$1,750,000,000/s` |
 | `4_secret_hatch.png` | Avatar swings a crystal pickaxe while a purple lava egg bursts open and a black mystery silhouette with a rainbow aura climbs out. Text: `SECRET 1 IN ???`, `$1,000,000/s` |
 | `icon_secret_hatch_512.png` | 512x512 icon, no text: a crystal pickaxe hits the lava egg and the mystery silhouette is inside |
 
