@@ -20,12 +20,16 @@ You are a senior Roblox game developer (Luau, Rojo, Roblox Studio MCP) building 
 </context>
 
 <inspiration>
-What currently works on Roblox (Oct 2026), and what we take from each:
-- "Get Your Driver's License!": a test with a grade, different examiners that change the outcome, 18 collectible rewards, secret endings.
-- "7 Days Cat-Sitting": day-by-day structure (Day 1-7), a chore routine, weird "anomalies", endings decided by the state of the house.
-- "Search For The Needle": one simple action, plus selling, upgrades, best-time records, codes, chapter events.
-- "+1 Stone Skipping": numbers always going up, quick level-ups.
+What is on Roblox's Top Trending / Up-and-Coming charts right now (Oct 12, 2026; players online, % likes), and what we take from each:
+- "7 Days Cat-Sitting" (28.3K, 73%): day-by-day structure (Day 1-7), a chore routine, weird "anomalies", endings decided by the state of the house.
+- "Firefighting Sim" (18.9K, 91%): spraying a hose is satisfying on its own. Physical, juicy cleaning actions keep people playing.
+- "Makeup Mania" (30.5K, 92%), "Pet Store Tycoon" (18.2K, 95%), "Dress Designer" (6.5K, 89%): everyday-life sims with cosmetics and creativity, rated very highly.
+- "+1 Stone Skipping" (32K, 96%), "Throw A Football!" (11.5K, 95%): one simple action, numbers always going up, quick level-ups.
+- "Survive a Million Monkeys" (24.4K, 97%), "Evolve a Cell" (11K): the title says exactly what you do.
+- "[4 PLAYER RALLY] Wrong Way", "[1-6 Player] ...", "Scam Together": multiplayer is called out right in the title.
 - "Need More Sleep" / "Need More Playtime": parent-and-chores story with ~15 endings that kids replay and YouTubers make guides for.
+- WARNING, "Get Your Driver's License!" (3.8K, 23% likes): it had ~18K players days earlier, then crashed. A strict pass/fail test with failures that feel unfair gets disliked and drops off the charts. Take its examiners, collectible rewards and secret endings, but NEVER its punishing pass/fail feel.
+- Big pattern: almost every game holding high player counts has 88-97% likes. Player satisfaction is what keeps a game on the charts.
 </inspiration>
 
 <design_rules>
@@ -45,6 +49,13 @@ Non-negotiable rules every popular Roblox game follows today. Apply them to ever
     - NEVER add paid random items without showing real odds before purchase.
     - NEVER reward likes, favorites or ratings.
 12. Kid-safe and all-ages: anomalies are funny-weird, never scary. No gore, no jump scares. Content must qualify for the lowest maturity label.
+13. Generous, never punishing (the Driver's License lesson):
+    - Every round ends with a reward and visible progress, even a bad grade. "GROUNDED" still pays some allowance and unlocks its ending as a collectible.
+    - A bad ending is a funny surprise, never a loss screen.
+    - NEVER make players repeat a long section because of one mistake.
+    - Hidden-item checks must feel fair: show the risk meter BEFORE the player hides things.
+14. Cleaning must feel satisfying by itself (the Firefighting Sim lesson): every cleaning action leaves a visible, juicy change the moment it happens (dirt sprays away, the floor shines, items pop into bins).
+15. Likes are the health metric. Design every system so players feel clever and lucky, not cheated. Target 85%+ likes. Any feature that could feel unfair gets a softer version.
 </design_rules>
 
 <game_design>
@@ -63,6 +74,7 @@ CHORES (each tunable and data-driven in GameConfig.Chores)
 - Make the bed: hold-prompt minigame.
 - Vacuum dust: dust patches disappear under the vacuum's radius. The floor visibly sparkles.
 - Scrub spills: a short tap/circle minigame.
+- Spray & wipe: aim a spray bottle at mud, juice and marker splats; they fizz away in a burst of sparkles and droplets. This is the most satisfying action in the game: the water stream and the dirt clearing must look and sound great.
 - HIDE IT (the risk/reward core): stuff any item under the bed or in the closet instantly. Each hidden item raises the chance the inspector checks there. Getting caught leads to funny endings.
 - Mess amount scales with players in the house and with the day.
 
@@ -97,7 +109,7 @@ ENDINGS (start with these 18, data-driven in GameConfig.Endings with Id, Name, H
 1. Spotless! (grade S)
 2. Allowance Day (A/B)
 3. Good Enough (C)
-4. GROUNDED (F)
+4. GROUNDED (F; still pays some allowance and counts as a collected ending)
 5. Closet Avalanche (caught with closet-hidden items)
 6. Monster Under the Bed (hid items under the bed during an anomaly)
 7. Blame the Dog (only the dog's mess remains)
@@ -123,6 +135,7 @@ LOST & FOUND
 
 ECONOMY & UPGRADES (Allowance = currency, all prices in config)
 - Vacuum: 5 tiers, radius/speed.
+- Sprayer: Spray Bottle -> Super Soaker -> Power Washer (range and cleaning speed).
 - Carry bag: capacity 3 -> 5 -> 8 -> 12 -> 20.
 - Sneakers: walk speed.
 - Gadgets:
@@ -139,6 +152,7 @@ SOCIAL & CO-OP
 - Server-wide announcement when anyone unlocks a secret ending.
 
 RETENTION
+- Seasonal events, data-driven in GameConfig.Events (start/end unix times): themed mess skins and one limited ending per season, e.g. Halloween candy wrappers or winter tinsel. The owner adds a seasonal tag to the title while each event runs.
 - Daily reward calendar (7 days, day 7 = exclusive cosmetic) with a streak counter. Shown after the first round, never before.
 - 3 daily quests (e.g., "Get an A", "Find 2 Lost & Found items", "Vacuum 50 dust") with an on-screen reset countdown (UTC).
 - Daily rotating modifier (e.g., Messy Monday 2x mess / 2x allowance, Dog Day) with a countdown.
@@ -201,6 +215,7 @@ This is the most important spec. It MUST hold exactly:
   - Onboarding funnel (above).
   - A per-round funnel: round start -> first chore -> inspector arrives -> results -> next day.
   - LogEconomyEvent for every allowance source and sink.
+  - A frustration signal: a custom event when a player leaves within 15 s of a results screen, tagged with the grade and ending. If it spikes on one ending or day, that part feels unfair.
   - LogProgressionEvent for days/weeks.
   - Custom events for endings, anomalies and Lost & Found finds.
 - Performance:
@@ -273,7 +288,8 @@ M6 Polish & launch prep
   - Juice pass, audio, loading screen (the room is visible within 3 s).
   - Mobile/console pass and a low-end performance pass.
   - Analytics review and a QA checklist.
-  - A plain-language list of what the owner must do on Creator Hub: create passes, products and badges and paste the IDs; maturity questionnaire; genre; description; icon/thumbnails; MaxPlayers 6.
+  - A frustration audit: list every moment a player could feel cheated (unclear chore, hidden-item check, timer too short, losing progress) and soften each one.
+  - A plain-language list of what the owner must do on Creator Hub: create passes, products and badges and paste the IDs; maturity questionnaire; genre; description; icon/thumbnails; MaxPlayers 6. Also suggest a title that says exactly what you do and calls out co-op (e.g. "[CO-OP] Clean Your Room!"), plus a seasonal tag while an event runs. Remind the owner that like % is the number to watch after launch (target 85%+).
 - Done when: every QA checklist item passes or is listed as a known issue.
 </milestones>
 
