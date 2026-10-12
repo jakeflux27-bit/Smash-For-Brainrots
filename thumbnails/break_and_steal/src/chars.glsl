@@ -139,7 +139,7 @@ bool bossMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, inou
   return true;}
 
 // ---------- giant Cameraman boss (suit + CCTV camera head), blocky like a Roblox rig ----------
-vec3 cTO=vec3(0.,-100.,0.); mat3 cTR=mat3(1.); vec3 cHO; mat3 cHR; vec3 cShL,cShR,cHaL,cHaR,cHipL,cHipR,cFtL,cFtR; float CMS=1.7;
+vec3 cTO=vec3(0.,-100.,0.); mat3 cTR=mat3(1.); vec3 cHO; mat3 cHR; vec3 cShL,cShR,cHaL,cHaR,cHipL,cHipR,cFtL,cFtR; float CMS=1.7; float TITAN=0.;
 void camRig(vec3 base, float s, vec3 torsoEul, vec3 headEul, vec3 armL, vec3 armR, vec3 legL, vec3 legR){
   CMS=s; cTO=base+vec3(0.,3.0,0.)*s; cTR=eulD(torsoEul);
   vec3 neck=cTO+cTR*vec3(0,1.,0)*s; cHR=eulD(headEul); cHO=neck+cHR*vec3(0,.75,0)*s;
@@ -163,14 +163,36 @@ vec2 mapCam(vec3 p){
   float hd=sdCamHead(lh)*s; float glass=sdSphere(lh-vec3(0.,-.02,1.52),.38)*s; glass=max(glass,-(lh.z-1.6)*s);
   r=U(r,vec2(hd,73.)); r=U(r,vec2(max(glass,sdCyl((lh-vec3(0.,-.02,1.15)).xzy,.52,.42,.04)*s),74.));
   vec3 ref=cTR*vec3(1,0,0);
-  r=U(r,vec2(limbBox(p,cShL,cHaL,ref,vec2(.5)*s,.5*s,.1*s),71.));
-  r=U(r,vec2(limbBox(p,cShR,cHaR,ref,vec2(.5)*s,.5*s,.1*s),71.));
-  r=U(r,vec2(limbBox(p,cHipL,cFtL,ref,vec2(.5)*s,0.,.1*s),72.));
-  r=U(r,vec2(limbBox(p,cHipR,cFtR,ref,vec2(.5)*s,0.,.1*s),72.));
+  float lw=TITAN>.5?.58:.5;
+  r=U(r,vec2(limbBox(p,cShL,cHaL,ref,vec2(lw)*s,.5*s,.12*s),71.));
+  r=U(r,vec2(limbBox(p,cShR,cHaR,ref,vec2(lw)*s,.5*s,.12*s),71.));
+  r=U(r,vec2(limbBox(p,cHipL,cFtL,ref,vec2(lw)*s,0.,.12*s),72.));
+  r=U(r,vec2(limbBox(p,cHipR,cFtR,ref,vec2(lw)*s,0.,.12*s),72.));
+  if(TITAN>.5){
+    float ar=sdBox(lt-vec3(0.,.2,.05),vec3(1.16,.86,.64),.16);                                   // chest armor
+    ar=min(ar,sdBox(lt-vec3(0.,-.85,0.),vec3(1.08,.22,.6),.08));                                 // belt plate
+    for(int i=0;i<2;i++){ float sg=i==0?-1.:1.; vec3 c=lt-vec3(sg*1.62,.82,0.);                 // big pauldrons
+      c.xy=mat2(cos(sg*.35),sin(sg*.35),-sin(sg*.35),cos(sg*.35))*c.xy; ar=min(ar,sdBox(c,vec3(.72,.42,.78),.2)); }
+    // angry brow plates over the lens
+    float br=1e9;
+    for(int i=0;i<2;i++){ float sg=i==0?-1.:1.; vec3 b=lh-vec3(sg*.36,.42,1.24);
+      b.xy=mat2(cos(sg*.45),sin(sg*.45),-sin(sg*.45),cos(sg*.45))*b.xy; br=min(br,sdBox(b,vec3(.38,.09,.22),.03)); }
+    r=U(r,vec2(ar*s,76.)); r=U(r,vec2(br*s,77.));
+    r=U(r,vec2(sdCyl((lt-vec3(0.,.25,.66)).xzy,.08,.34,.04)*s,75.));                              // glowing chest core
+  }
   return r;}
 bool camMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, inout float spec, inout float detail, inout float grp){
-  if(id<69.5||id>74.5) return false;
+  if(id<69.5||id>77.5) return false;
   float s=CMS; grp=6.; spec=.3; detail=.6;
+  if(TITAN>.5){ vec3 lt=loc(p,cTO,cTR)/s;
+    if(id>76.5){ alb=HX(0x15171c); emi=HX(0xff2a10)*.25; spec=1.2; detail=.95; return true; }
+    if(id>74.5&&id<75.5){ float rr=length((lt-vec3(0.,.25,.7)).xy); alb=HX(0x9af0ff); emi=HX(0x30c8ff)*(4.-smoothstep(.0,.34,rr)*2.5); detail=.95; return true; }
+    if(id>75.5||id<72.5){ vec3 q=p/s*2.2; float seam=min(abs(fract(q.x)-.5),min(abs(fract(q.y)-.5),abs(fract(q.z)-.5)));
+      alb=mix(HX(0x4a5260),HX(0x9aa4b4),smoothstep(.35,.75,fbm(p/s*1.5)))*mix(.55,1.,smoothstep(.0,.06,seam));
+      if(id>75.5) alb=mix(alb,HX(0xc4ccd8),.45);
+      if(id<70.5){ if(lt.z>.55&&abs(lt.x)<.5&&lt.y<.7&&lt.y>-.3) alb*=.75; }
+      float dh=min(length(p-cHaL),length(p-cHaR))/s; if(id>70.5&&id<71.5&&dh<.55) alb=HX(0x2a2e36);
+      spec=1.6; detail=.7; return true; } }
   if(id<70.5){ vec3 lt=loc(p,cTO,cTR)/s; alb=HX(0x2b2f3a)*mix(.85,1.1,fbm(lt*4.));
     if(lt.z>.38){ float vx=abs(lt.x), vy=lt.y;
       if(vy>-.35 && vx<(vy+.35)*.45) alb=HX(0xf2f2f0);                                  // shirt V
@@ -180,7 +202,7 @@ bool camMaterial(vec3 p, vec3 n, float id, inout vec3 alb, inout vec3 emi, inout
     detail=.7; }
   else if(id<71.5){ alb=HX(0x2b2f3a); float dh=min(length(p-cHaL),length(p-cHaR))/s; if(dh<.5) alb=HX(0x1a1c22); if(dh>.5&&dh<.62) alb=HX(0xf2f2f0); detail=.6; }
   else if(id<72.5){ alb=HX(0x22252d); float df=min(length(p-cFtL),length(p-cFtR))/s; if(df<.45) alb=HX(0x101114); spec=.5; detail=.55; }
-  else if(id<73.5){ vec3 lh=loc(p,cHO,cHR)/s; alb=HX(0xdfe3ea)*mix(.9,1.03,fbm(lh*5.)); spec=.9;
+  else if(id<73.5){ vec3 lh=loc(p,cHO,cHR)/s; alb=(TITAN>.5?HX(0x6a7282):HX(0xdfe3ea))*mix(.9,1.03,fbm(lh*5.)); spec=.9;
     if(lh.y<-.7||abs(lh.z-1.2)<.5&&length(lh.xy-vec2(0.,-.02))<.56) alb=HX(0x26282e);
     if(lh.z<-1.08) alb=HX(0x9aa0aa);
     // little red REC light
